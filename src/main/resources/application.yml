@@ -1,0 +1,5 @@
+server:
+  port: 8080
+
+portfolio:
+  privateDir: ${PORTFOLIO_PRIVATE_DIR:}
