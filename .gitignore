@@ -35,4 +35,9 @@ secrets/
 private/
 **/secrets/
 **/private/
-
+.env
+.env.properties
+.idea/
+.vscode/
+target/
+*.iml

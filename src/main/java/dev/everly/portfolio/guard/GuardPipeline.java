@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.core.annotation.AnnotationAwareOrderComparator;
 import org.springframework.stereotype.Component;
 
@@ -11,13 +13,14 @@ import dev.everly.portfolio.model.ChatResponse;
 
 @Component
 public final class GuardPipeline {
-
 	private final List<GuardRule> rulesInPriorityOrder;
+	private static final Logger log = LoggerFactory.getLogger(GuardPipeline.class);
 
 	public GuardPipeline(List<GuardRule> rulesInPriorityOrder) {
 		List<GuardRule> sorted = new ArrayList<>(Objects.requireNonNull(rulesInPriorityOrder));
 		AnnotationAwareOrderComparator.sort(sorted);
 		this.rulesInPriorityOrder = List.copyOf(sorted);
+		log.info("Initialized GuardPipeline with {} rules.", this.rulesInPriorityOrder.size());
 	}
 
 	public ChatResponse evaluatePreOrNull(GuardContext context) {

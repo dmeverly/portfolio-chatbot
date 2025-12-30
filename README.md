@@ -41,46 +41,61 @@ The goal is **reliability**, not novelty.
 
 ---
 
-## Architecture Summary
+## Architecture Overview
 
-### Retrieval-Augmented Prompting
+This application is structured to demonstrate **failure-aware LLM orchestration** in a real, user-facing system.
 
-The chatbot loads structured Markdown files containing:
+### Grounded Retrieval (No Black-Box RAG)
+The chatbot loads curated Markdown documents containing education, experience, and project summaries.  
+Relevant context is selectively injected into prompts to ground responses without relying on opaque vector databases or external services.
 
-- education
-- certifications
-- employment history
-- project summaries
+This keeps behavior transparent, predictable, and easy to audit.
 
-This data is selectively injected into prompts to ground responses without relying on external vector databases.
-
----
-
-### Pre- and Post-LLM Guard Pipeline
-
+### Explicit Guard Pipeline
 All interactions pass through guard stages **before and after** model execution.
 
-- **Pre-LLM guards** evaluate user input and can short-circuit execution, preventing certain classes of requests from
-  ever reaching the LLM.
-- **Post-LLM guards** inspect generated responses and only return content to the user if it passes defined policy
-  checks.
-- If a response fails post-LLM checks, a **controlled fallback response** is returned instead.
+- **Pre-LLM guards** evaluate user input and can short-circuit execution, reducing cost and attack surface.
+- **Post-LLM guards** validate model output before it is ever shown to a user.
+- If a response violates policy, a **controlled fallback** is returned instead of raw model output.
 
-The public release exposes a **minimal guard set** for demonstration and transparency.  
-More comprehensive guard logic is implemented in a private repository and excluded from the public codebase by design.
+Guard logic is intentionally explicit and testable rather than embedded in prompts.
+
+### Orchestration via SynapSys
+All model interaction is delegated to **SynapSys**, which handles:
+
+- client selection
+- structured prompt assembly
+- output parsing and validation
+- bounded local repair of malformed responses
+
+This keeps the chatbot thin while exercising SynapSys under realistic conditions.
+
+**Design focus:** clarity, determinism, and safe failure modes over maximal generation flexibility.
 
 ---
 
-### LLM Orchestration
+## Security & LLM Safety
 
-All model interaction is delegated to **SynapSys**, which manages:
+This application is designed under the assumption that it is **Internet-exposed** and receives **untrusted, adversarial input**. Security controls span the network edge, application layer, and LLM interaction boundary.
 
-- client selection
-- structured prompting
-- parsing and validation
-- bounded local repair of malformed output
+### Key Protections
+- **Edge isolation:** Deployed behind Cloudflare Tunnel with no inbound ports exposed.
+- **Profile-based hardening:** Production-only controls (`prod` profile) enable rate limiting, strict CORS, and safe error handling.
+- **Application safeguards:** Request size limits, per-IP rate limiting, minimal `/health` endpoint, and hardened response headers.
+- **Secret hygiene:** No secrets or private prompts are bundled in artifacts or returned to clients.
 
-This keeps the chatbot thin while exercising SynapSys under real usage.
+### LLM Guard Pipeline
+All requests pass through explicit guard stages **before and after** model execution.
+
+- **Pre-LLM guards** block policy-extraction and prompt-injection attempts before reaching the model.
+- **Post-LLM guards** sanitize output and prevent accidental disclosure if a model misbehaves.
+- **Private policy isolation:** Prompt secrecy and governance rules live in a private, profile-scoped module and are excluded from the public codebase by design.
+
+### Abuse & Regression Testing
+Prompt-leak defenses are verified using **concurrent integration tests** that simulate intermittent model leakage under load (without consuming real LLM tokens).  
+If a future refactor or model upgrade reintroduces leakage, tests fail loudly.
+
+**Design goal:** predictable, failure-aware behavior — not reliance on model compliance.
 
 ---
 

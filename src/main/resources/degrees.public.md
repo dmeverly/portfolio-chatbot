@@ -1,5 +1,2 @@
-MS in Computer Science — Drexel University (expected 2026)
-MS in Nursing — Penn State University (2017)
-BS in Nursing — Penn State University (2015)
-AS in Nursing — Hagerstown Community College (2013)
+MS in Computer Science — Drexel University (2026)
 Graduate Certificate in Computational Artificial Intelligence — Drexel University (2025)

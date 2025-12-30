@@ -1,0 +1,6 @@
+portfolio:
+  privateDir: ${PORTFOLIO_PRIVATE_DIR:}
+
+logging:
+  level:
+    root: INFO

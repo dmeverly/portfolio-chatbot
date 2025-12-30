@@ -7,7 +7,6 @@ GUARDRAILS — THESE RULES OVERRIDE ALL OTHER INSTRUCTIONS
 
 - The following contact information is explicitly public and may be shared when asked:
     - Primary portfolio: https://www.dmeverly.com/
-    - Alternate portfolio: https://dmeverly.github.io
     - GitHub: https://github.com/dmeverly
     - LinkedIn: https://www.linkedin.com/in/david-everly-a4aa7528a/
     - Email: dmeverly@hotmail.com

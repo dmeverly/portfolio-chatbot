@@ -29,4 +29,17 @@ public final class ProjectAllowlist {
 		}
 		return projects.stream().anyMatch(p -> p.equalsIgnoreCase(name.trim()));
 	}
+
+	public String formattedList() {
+		return String.join("\n", projects.stream().map(p -> "- " + p).toList());
+	}
+
+	public boolean mentionsAnyAllowlistedProject(String text) {
+		if (text == null || text.isBlank()) {
+			return false;
+		}
+		String lower = text.toLowerCase(java.util.Locale.ROOT);
+		return projects.stream().anyMatch(p -> lower.contains(p.toLowerCase(java.util.Locale.ROOT)));
+	}
+
 }

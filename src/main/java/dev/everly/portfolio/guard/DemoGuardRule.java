@@ -1,7 +1,9 @@
 package dev.everly.portfolio.guard;
 
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
+@Profile("demo")
 @Component
 public final class DemoGuardRule implements GuardRule {
 	@Override

@@ -1,13 +1,11 @@
 package dev.everly.portfolio.rag;
 
-import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Component;
 
 import jakarta.annotation.PostConstruct;
@@ -22,22 +20,12 @@ public class InMemoryRetriever implements Retriever {
 		this.instructionBundle = instructionBundle;
 	}
 
-	private static String loadResource(String name) {
-		try {
-			return new String(new ClassPathResource(name).getInputStream().readAllBytes(), StandardCharsets.UTF_8);
-		} catch (Exception e) {
-			throw new IllegalStateException("Failed to load " + name, e);
-		}
-	}
-
 	@PostConstruct
 	public void loadPortfolioData() {
 		String rawFacts = instructionBundle.text(InstructionBundle.InstructionKey.FACTS);
 
 		this.portfolioDocuments = Arrays.stream(rawFacts.split("(?m)^---\\s*$")).map(String::trim)
 				.filter(s -> !s.isBlank()).collect(Collectors.toList());
-
-		log.info("Loaded {} fact chunks from facts.md", portfolioDocuments.size());
 	}
 
 	@Override

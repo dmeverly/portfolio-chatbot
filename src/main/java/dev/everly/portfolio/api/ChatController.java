@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.RestController;
 import dev.everly.portfolio.agent.PortfolioChatbotAgent;
 import dev.everly.portfolio.model.ChatRequest;
 import dev.everly.portfolio.model.ChatResponse;
+import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/api/chat")
@@ -20,7 +21,7 @@ public class ChatController {
 	}
 
 	@PostMapping
-	public ChatResponse chat(@RequestBody ChatRequest request) {
+	public ChatResponse chat(@Valid @RequestBody ChatRequest request) {
 		return agent.execute(request);
 	}
 }

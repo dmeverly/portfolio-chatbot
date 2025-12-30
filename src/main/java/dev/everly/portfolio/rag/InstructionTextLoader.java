@@ -15,22 +15,22 @@ public final class InstructionTextLoader {
 		this.resourceLoader = Objects.requireNonNull(resourceLoader, "resourceLoader");
 	}
 
-	public String loadOrThrow(String primaryLocation, String fallbackLocation, String logicalName) {
-		String text = loadOrNull(primaryLocation);
-		if (text != null && !text.isBlank()) {
-			return text.trim();
+	public Loaded loadOrThrow(String primaryLocation, String fallbackLocation, String logicalName) {
+		Loaded loaded = load(primaryLocation);
+		if (loaded != null && !loaded.text().isBlank()) {
+			return loaded.trimmed();
 		}
 
-		text = loadOrNull(fallbackLocation);
-		if (text != null && !text.isBlank()) {
-			return text.trim();
+		loaded = load(fallbackLocation);
+		if (loaded != null && !loaded.text().isBlank()) {
+			return loaded.trimmed();
 		}
 
 		throw new IllegalStateException("Failed to load " + logicalName + " from primary [" + primaryLocation
 				+ "] or fallback [" + fallbackLocation + "]");
 	}
 
-	private String loadOrNull(String location) {
+	private Loaded load(String location) {
 		if (location == null || location.isBlank()) {
 			return null;
 		}
@@ -41,9 +41,16 @@ public final class InstructionTextLoader {
 				return null;
 			}
 			byte[] bytes = StreamUtils.copyToByteArray(r.getInputStream());
-			return new String(bytes, StandardCharsets.UTF_8);
+			String text = new String(bytes, StandardCharsets.UTF_8);
+			return new Loaded(location, text);
 		} catch (Exception e) {
 			return null;
+		}
+	}
+
+	public record Loaded(String sourceLocation, String text) {
+		public Loaded trimmed() {
+			return new Loaded(sourceLocation, text == null ? "" : text.trim());
 		}
 	}
 }

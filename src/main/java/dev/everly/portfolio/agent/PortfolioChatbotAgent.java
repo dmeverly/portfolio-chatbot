@@ -23,13 +23,10 @@ import dev.everly.synapsys.api.*;
 public class PortfolioChatbotAgent implements Agent<ChatRequest, ChatResponse> {
 
 	private static final Logger log = LoggerFactory.getLogger(PortfolioChatbotAgent.class);
-
 	private final Retriever retriever;
 	private final ObjectMapper objectMapper;
 	private final InstructionBundle instructions;
-
 	private final GuardPipeline guardPipeline;
-
 	private volatile GeminiAgent<ChatRequest, String, ChatResponse> geminiAgent;
 
 	public PortfolioChatbotAgent(Retriever retriever, ObjectMapper objectMapper, InstructionBundle instructions,
@@ -38,7 +35,6 @@ public class PortfolioChatbotAgent implements Agent<ChatRequest, ChatResponse> {
 		this.objectMapper = Objects.requireNonNull(objectMapper, "objectMapper");
 		this.instructions = Objects.requireNonNull(instructions, "instructions");
 		this.guardPipeline = Objects.requireNonNull(guardPipeline, "guardPipeline");
-
 	}
 
 	@Override
@@ -55,7 +51,7 @@ public class PortfolioChatbotAgent implements Agent<ChatRequest, ChatResponse> {
 			synchronized (this) {
 				agentInstance = geminiAgent;
 				if (agentInstance == null) {
-					log.info("Initializing GeminiAgent lazily (SynapSys should now be started).");
+					log.info("Initializing GeminiAgent lazily - SynapSys started.");
 					geminiAgent = agentInstance = buildGeminiAgent();
 				}
 			}
