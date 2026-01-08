@@ -1,0 +1,10 @@
+.env
+.idea/
+*.iml
+node_modules/
+dist/
+logs/
+private/
+secrets/
+everlybot.json
+synapsys-private-guards/
