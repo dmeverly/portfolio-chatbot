@@ -8,6 +8,10 @@ export class RequestValidationGuard implements Guard {
 
   middleware() {
     return (req: Request, res: Response, next: NextFunction) => {
+      if (req.method !== "POST" || req.path !== "/api/chat") {
+        return next();
+      }
+
       const raw: unknown = (req.body as any)?.message;
 
       if (typeof raw !== "string") {
