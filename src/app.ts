@@ -188,6 +188,15 @@ app.post("/api/chat", async (req: Request, res: Response) => {
                 )
             );
 
+            if (status >= 500) {
+                sendClientError(res, 503, "Service unavailable. Please try again.", "SYNAPSYS_5XX", {
+                    synapsysStatus: status,
+                    synapsysSender: data?.sender,
+                    synapsysReason: data?.metadata?.reason
+                });
+                return;
+            }
+
             res.status(status).json(data);
             return;
         }
