@@ -16,6 +16,9 @@ import { getClientIp } from "./guards/ip";
 import { RateLimitGuard } from "./guards/RateLimitGuard";
 import { RequestIdGuard } from "./guards/RequestIdGuard";
 import { RequestValidationGuard } from "./guards/RequestValidationGuard";
+import crypto from "crypto";
+import { URL } from "url";
+import { randomUUID } from "crypto";
 
 const privateConfig = loadEverlybotPrivateConfig();
 
@@ -33,6 +36,35 @@ const RATE_LIMIT_BURST = Number(process.env.RATE_LIMIT_BURST || 10);
 const base = process.env.SYNAPSYS_BASE_URL;
 if (!base) throw new Error("Missing env var: SYNAPSYS_BASE_URL");
 const synapsysUrl = `${base}/api/v1/chat`;
+
+
+function sha256Hex(data: Buffer | string): string {
+    return crypto.createHash("sha256").update(data).digest("hex");
+}
+
+function hmacBase64(secret: string, data: string): string {
+    return crypto.createHmac("sha256", secret).update(data, "utf8").digest("base64");
+}
+
+function buildCanonicalV1(args: {
+    method: string;
+    pathWithQuery: string;
+    sender: string;
+    timestamp: string; 
+    nonce: string;
+    bodySha256Hex: string;
+}): string {
+    return [
+        "v1",
+        args.method.toUpperCase(),
+        args.pathWithQuery,
+        args.sender,
+        args.timestamp,
+        args.nonce,
+        args.bodySha256Hex,
+    ].join("\n");
+}
+
 
 app.use(express.json({ limit: JSON_BODY_LIMIT }));
 
@@ -110,7 +142,7 @@ for (const g of guards) {
 }
 
 app.post("/api/chat", async (req: Request, res: Response) => {
-    const userQuery: string = (req as any).validatedMessage;
+    const message: string = (req as any).validatedMessage;
 
     try {
         console.log(
@@ -120,24 +152,46 @@ app.post("/api/chat", async (req: Request, res: Response) => {
                     event: "incoming",
                     rid: (res.locals as any).requestId,
                     ip: getClientIp(req),
-                    messagePreview: userQuery.slice(0, 120),
+                    messagePreview: message.slice(0, 120),
                 },
                 null,
                 2
             )
         );
 
-        const payload: InboundMessage = {
-            content: userQuery,
-            context: {},
-        };
+        const payload: InboundMessage = { content: message, context: {} };
 
-        const response = await axios.post<SynapSysResponse>(synapsysUrl, payload, {
+        const bodyJson = JSON.stringify(payload);
+        const bodyBytes = Buffer.from(bodyJson, "utf8");
+
+        const ts = Math.floor(Date.now() / 1000).toString();
+        const nonce = randomUUID();
+
+        const u = new URL(synapsysUrl);
+        const pathWithQuery = u.pathname + (u.search || "");
+
+        const bodyHash = sha256Hex(bodyBytes);
+
+        const canonical = buildCanonicalV1({
+            method: "POST",
+            pathWithQuery,
+            sender: SENDER_ID,
+            timestamp: ts,
+            nonce,
+            bodySha256Hex: bodyHash,
+        });
+
+        const signature = hmacBase64(SYNAPSYS_KEY, canonical);
+
+
+        const response = await axios.post<SynapSysResponse>(synapsysUrl, bodyJson, {
             timeout: Number(process.env.SYNAPSYS_TIMEOUT_MS || 20000),
             headers: {
                 "Content-Type": "application/json",
-                "X-SynapSys-Key": SYNAPSYS_KEY,
                 "X-SynapSys-Sender": SENDER_ID,
+                "X-SynapSys-Timestamp": ts,
+                "X-SynapSys-Nonce": nonce,
+                "X-SynapSys-Signature": signature,
             },
         });
 

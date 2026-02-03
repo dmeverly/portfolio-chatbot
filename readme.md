@@ -1,30 +1,39 @@
-# Everlybot — Reference Implementation for SynapSys
+<p align="center">
+  <img src="src/assets/emblem-mono-light.png" width="84" alt="" />
+</p>
 
-**Author**: David Everly
+# Everlybot (v2.1) — Reference Implementation for SynapSys
+
+**Author**: David Everly  
 **Languages**:
+- **TypeScript / Node.js** — Everlybot (edge application)
+- **Java / Spring Boot** — SynapSys (LLM broker & guard framework)  
+**Status**: Active development  
+Copyright © 2025 David Everly  
 
-* **TypeScript / Node.js** — Everlybot (edge application)
-* **Java / Spring Boot** — SynapSys (LLM broker & guard framework)
+Everlybot is a **production-style reference implementation** demonstrating how
+**untrusted user input can be safely exposed to large language models** using
+**failure-aware orchestration and explicit trust boundaries**.
 
-**Status**: Active
-**Version**: v2 — security-hardened rewrite
+While the system answers questions about my professional background, its primary
+purpose is to showcase **controlled LLM exposure**, not conversational novelty.
+
+This repository contains the **public edge application**.
+LLM orchestration, guard logic, and policy enforcement are delegated to SynapSys.
 
 ---
 
-## Overview
+## Purpose  
 
-The **Portfolio Chatbot** is a production-style conversational system designed to answer questions about my professional background, projects, and experience.
+Everlybot exists to demonstrate how a public-facing application can:
 
-More importantly, it serves as a **reference implementation for SynapSys**, demonstrating how a **failure-aware LLM orchestration framework** can be exposed to untrusted users while maintaining strict behavioral guarantees.
+- accept untrusted user input
+- expose LLM capabilities safely
+- preserve deterministic system behavior
+- fail predictably under adversarial conditions
 
-Version 2 is a deliberate redesign focused on:
-
-* explicit trust boundaries
-* strict separation of responsibilities
-* deterministic guard behavior
-* verified resistance to prompt leakage and instruction exfiltration
-
-The priority is **reliability and containment**, not open-ended generation.
+It prioritizes **containment, separation of responsibility, and reliability**
+over open-ended or creative generation.
 
 ---
 
@@ -32,17 +41,17 @@ The priority is **reliability and containment**, not open-ended generation.
 
 Most public-facing chatbots fail in predictable ways:
 
-* hallucinated biographical or professional details
-* leakage of system prompts or retrieval context
-* reliance on informal prompt “rules” for safety
-* fragile behavior under adversarial or malformed input
+- hallucinated biographical or professional details
+- leakage of system prompts or retrieval context
+- reliance on informal prompt “rules” for safety
+- fragile behavior under malformed or adversarial input
 
 This project explores a more disciplined architecture:
 
-* a **thin, untrusted edge application**
-* **centralized orchestration and policy enforcement**
-* **explicit guard stages before and after model execution**
-* **deterministic fallback behavior on policy violation**
+- a **thin, untrusted edge application**
+- **centralized LLM orchestration and policy enforcement**
+- **explicit guard stages before and after model execution**
+- **deterministic fallback behavior on policy violation**
 
 The goal is not novelty — it is **predictable failure modes**.
 
@@ -54,10 +63,10 @@ The goal is not novelty — it is **predictable failure modes**.
 Browser / Client
        │
        ▼
- Everlybot (TypeScript, Edge App)
+ Everlybot 
        │   (authenticated, minimal payload)
        ▼
- SynapSys (Java, Spring Boot)
+ SynapSys 
        │
        ├─ Pre-LLM Guards
        ├─ Strategy-Based Model Selection
@@ -81,16 +90,17 @@ Responsibilities:
 
 * accept user input
 * forward **only** `{ content, context }` to SynapSys
-* authenticate itself via a shared client key
-* return SynapSys responses verbatim (no mutation)
+* authenticate itself using an HMAC-symmetric signing key
+* return SynapSys responses
 
 Everlybot explicitly **does not**:
 
-* select models
-* load system prompts
-* perform guard logic
-* inject retrieval context
+- select LLM providers or models
+- load system prompts
+- apply guard logic
+- inject retrieval context
 
+End users are **not authenticated by SynapSys** — only upstream applications are.
 This enforces a hard trust boundary.
 
 ---
@@ -99,11 +109,11 @@ This enforces a hard trust boundary.
 
 SynapSys owns **all LLM-related intelligence**:
 
-* provider and model selection via strategy pattern
-* system instruction loading
-* grounded context assembly
-* pre- and post-execution guard pipelines
-* response validation and controlled fallback
+- provider and model selection
+- system instruction loading
+- grounded context assembly
+- pre- and post-execution guard pipelines
+- response validation and controlled fallback
 
 Everlybot cannot override or bypass this behavior.
 
@@ -117,10 +127,10 @@ All requests pass through **explicit, ordered guard stages**.
 
 Executed before any model call:
 
-* system prompt extraction attempts
-* instruction replay or encoding attacks
-* disallowed or illegal request classes
-* malformed or abusive input
+- system prompt extraction attempts
+- instruction replay or encoding attacks
+- disallowed or illegal request classes
+- malformed or abusive input
 
 Violations short-circuit execution.
 
@@ -130,12 +140,13 @@ Violations short-circuit execution.
 
 Executed on model output:
 
-* prompt or policy leakage
-* unsafe or disallowed content
-* hallucinated personal data
-* malformed or non-conforming responses
+- prompt or policy leakage
+- unsafe or disallowed content
+- hallucinated personal data
+- malformed or non-conforming responses
 
-Violations result in **deterministic fallback responses** — never raw model output.
+Violations result in **deterministic fallback responses** —
+raw model output is never returned on violation.
 
 ---
 
@@ -143,38 +154,48 @@ Violations result in **deterministic fallback responses** — never raw model ou
 
 Responses are grounded using **curated Markdown documents** covering:
 
-* education
-* professional history
-* projects
-* certifications
+- education
+- professional history
+- projects
+- certifications
 
 Context injection is **explicit and auditable**.
-This avoids opaque vector databases or uncontrolled retrieval while preserving predictable behavior.
+This avoids opaque vector databases while preserving predictable behavior.
 
 ---
 
-## Security Posture
+## Security Model
 
-The system is designed under the assumption that it is **publicly reachable and adversarially probed**.
+The system is designed under the assumption that it is
+**publicly reachable and adversarially probed**.
 
 ### Network & Deployment
 
-* deployed behind **Cloudflare Tunnel**
-* no inbound ports exposed
-* Everlybot is the only Internet-facing service
+- deployed behind a managed reverse tunnel
+- no inbound ports exposed
+- Everlybot is the only Internet-facing service
+- SynapSys binds to localhost and is not externally reachable
 
 ### Application-Level Controls
 
-* strict CORS configuration in production
-* request size limits
-* minimal `/health` endpoints
-* no sensitive data in logs or responses
+- strict request size limits
+- minimal `/health` endpoints
+- no sensitive data in logs or responses
+- centralized authentication at the broker boundary
 
-### Secret Hygiene
+### Authentication
 
-* no secrets committed to the repository
-* private keys and guard policies live outside the public codebase
-* shared client keys are validated server-side only
+Everlybot authenticates to SynapSys using **HMAC request signing**.
+Requests are bound to:
+
+- HTTP method
+- request path
+- request body
+- timestamp
+- nonce
+
+This prevents replay, tampering, and credential reuse.
+No bearer secrets are transmitted over the wire.
 
 ---
 
@@ -182,18 +203,18 @@ The system is designed under the assumption that it is **publicly reachable and 
 
 A dedicated test suite simulates:
 
-* prompt injection
-* system prompt exfiltration
-* context poisoning
-* roleplay privilege escalation
-* illegal and medical requests
-* partial model compliance under load
+- prompt injection
+- system prompt exfiltration
+- context poisoning
+- role or privilege escalation
+- illegal or unsafe requests
+- partial model compliance under load
 
 Tests run against a **deterministic stub LLM**, ensuring:
 
-* zero real token usage
-* reproducible guard behavior
-* immediate detection of regressions
+- zero real token usage
+- reproducible guard behavior
+- immediate detection of regressions
 
 If a future refactor reintroduces leakage, tests fail loudly.
 
@@ -203,18 +224,18 @@ If a future refactor reintroduces leakage, tests fail loudly.
 
 ### Everlybot (TypeScript)
 
-* `src/app.ts` — Express entrypoint
-* `src/config` — private configuration loader
-* `src/types.ts` — shared message types
+- `src/app.ts` — Express entrypoint
+- `src/config` — private configuration loader
+- `src/types.ts` — shared message contracts
 
 ### SynapSys (Java)
 
-* `service.guard` — guard pipeline
-* `service.llm` — provider abstraction
-* `strategy` — model and provider selection
-* `api` — broker interface
+- `service.guard` — guard pipeline
+- `service.llm` — provider abstraction
+- `strategy` — model and provider selection
+- `api` — broker interface
 
-Private guard rules and system instructions are intentionally excluded from the public repository.
+Private guard rules and system instructions are intentionally excluded.
 
 ---
 
@@ -222,13 +243,14 @@ Private guard rules and system instructions are intentionally excluded from the 
 
 This project demonstrates:
 
-* explicit trust boundaries around LLM usage
-* centralized policy enforcement
-* deterministic failure handling
-* testable and auditable guard logic
-* safe exposure of LLM systems to untrusted clients
+- explicit trust boundaries around LLM usage
+- centralized, testable policy enforcement
+- deterministic handling of unsafe or malformed output
+- safe exposure of LLM systems to untrusted clients
 
-These constraints mirror real-world requirements in **healthcare, security, and regulated environments**, where uncontrolled output introduces downstream risk.
+These constraints mirror real-world requirements in
+**healthcare, security, and regulated environments**,
+where uncontrolled output introduces downstream risk.
 
 ---
 
@@ -236,21 +258,21 @@ These constraints mirror real-world requirements in **healthcare, security, and 
 
 Current limitations:
 
-* retrieval is non-vectorized
-* guards are rule-based rather than statistical
-* no session or memory persistence
+- retrieval is non-vectorized
+- guards are rule-based rather than statistical
+- no session or memory persistence
 
 Planned work:
 
-* optional vector database integration
-* expanded guard taxonomy
-* containerized deployment and CI hardening
+- optional vector database integration
+- expanded guard taxonomy
+- containerized deployment and CI hardening
 
 ---
 
-## Disclaimer
+## License
 
-This project was developed independently on personal time.
-It is not affiliated with, endorsed by, or representative of any employer.
+This project is licensed under the **Apache License 2.0**.
 
-All data used consists of publicly available information about the author.
+You are free to use, modify, and distribute this software, including for
+commercial purposes, subject to the terms of the license.
