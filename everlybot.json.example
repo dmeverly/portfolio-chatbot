@@ -1,8 +1,0 @@
-{
-  "senderId": "everlybot",
-  "synapsysClientKey": "put key here",
-  "providerId": "gemini",
-  "model": "gemini-2.5-flash",
-  "systemInstructionPath": "path to instructions",
-  "fileSearchStoreName": "gemini fileSearchStoreName"
-}

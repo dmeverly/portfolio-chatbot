@@ -6,6 +6,6 @@ dist/
 logs/
 private/
 secrets/
-everlybot.json
+HearthstoneTrainer.json
 synapsys-private-guards/
 local.mk

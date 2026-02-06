@@ -1,13 +1,12 @@
 import fs from "node:fs";
 import path from "node:path";
 
-export type EverlybotPrivateConfig = {
+export type HearthstoneTrainerPrivateConfig = {
   senderId: string;
   synapsysClientKey: string;
   providerId: string;
   model: string;
   systemInstructionPath: string;
-  fileSearchStoreName: string;
 };
 
 function requiredEnv(name: string): string {
@@ -24,9 +23,9 @@ function requiredString(obj: Record<string, unknown>, key: string): string {
   return v.trim();
 }
 
-export function loadEverlybotPrivateConfig(): EverlybotPrivateConfig {
+export function loadHearthstoneTrainerPrivateConfig(): HearthstoneTrainerPrivateConfig {
   const secretsPath = requiredEnv("SECRETS_DIR");
-  const filename = (process.env.EVERLYBOT_CONFIG_FILE || "everlybot.json").trim();
+  const filename = (process.env.HearthstoneTrainer_CONFIG_FILE || "HearthstoneTrainer.json").trim();
 
   const fullPath = path.resolve(secretsPath, filename);
   if (!fs.existsSync(fullPath)) throw new Error(`Config file not found: ${fullPath}`);
@@ -50,7 +49,6 @@ export function loadEverlybotPrivateConfig(): EverlybotPrivateConfig {
     synapsysClientKey: requiredString(obj, "synapsysClientKey"),
     providerId: requiredString(obj, "providerId"),
     model: requiredString(obj, "model"),
-    systemInstructionPath: requiredString(obj, "systemInstructionPath"),
-    fileSearchStoreName: requiredString(obj, "fileSearchStoreName"),
+    systemInstructionPath: requiredString(obj, "systemInstructionPath")
   };
 }

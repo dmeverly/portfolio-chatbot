@@ -9,7 +9,7 @@ import cors from "cors";
 import axios from "axios";
 
 import { InboundMessage, SynapSysResponse } from "./types";
-import { loadEverlybotPrivateConfig } from "./config/privateConfig";
+import { loadHearthstoneTrainerPrivateConfig } from "./config/privateConfig";
 
 import { Guard } from "./guards/Guard";
 import { getClientIp } from "./guards/ip";
@@ -20,13 +20,13 @@ import crypto from "crypto";
 import { URL } from "url";
 import { randomUUID } from "crypto";
 
-const privateConfig = loadEverlybotPrivateConfig();
+const privateConfig = loadHearthstoneTrainerPrivateConfig();
 
 const SENDER_ID = privateConfig.senderId;
 const SYNAPSYS_KEY = privateConfig.synapsysClientKey;
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3001;
 
 const MAX_MESSAGE_LENGTH = Number(process.env.MAX_MESSAGE_LENGTH || 4000);
 const JSON_BODY_LIMIT = process.env.JSON_BODY_LIMIT || "16kb";
@@ -85,7 +85,7 @@ function sendClientError(
     console.log(
         JSON.stringify(
             {
-                at: "everlybot",
+                at: "HearthstoneTrainer",
                 event: "client_error",
                 rid: (res.locals as any).requestId,
                 httpStatus,
@@ -148,7 +148,7 @@ app.post("/api/chat", async (req: Request, res: Response) => {
         console.log(
             JSON.stringify(
                 {
-                    at: "everlybot",
+                    at: "HearthstoneTrainer",
                     event: "incoming",
                     rid: (res.locals as any).requestId,
                     ip: getClientIp(req),
@@ -200,7 +200,7 @@ app.post("/api/chat", async (req: Request, res: Response) => {
         console.log(
             JSON.stringify(
                 {
-                    at: "everlybot",
+                    at: "HearthstoneTrainer",
                     event: "synapsys_response",
                     rid: (res.locals as any).requestId,
                     result: "PASS",
@@ -225,7 +225,7 @@ app.post("/api/chat", async (req: Request, res: Response) => {
             console.log(
                 JSON.stringify(
                     {
-                        at: "everlybot",
+                        at: "HearthstoneTrainer",
                         event: "synapsys_error",
                         rid: (res.locals as any).requestId,
                         result: "FAIL",
@@ -258,7 +258,7 @@ app.post("/api/chat", async (req: Request, res: Response) => {
         console.log(
             JSON.stringify(
                 {
-                    at: "everlybot",
+                    at: "HearthstoneTrainer",
                     event: "critical_error",
                     rid: (res.locals as any).requestId,
                     result: "FAIL",
@@ -320,7 +320,7 @@ app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
     console.error(
         JSON.stringify(
             {
-                at: "everlybot",
+                at: "HearthstoneTrainer",
                 event: "unhandled_error",
                 httpStatus: 500,
                 message: err?.message || String(err),
@@ -345,6 +345,6 @@ const server = app.listen(PORT, () => {
         listenLocation = `${host}:${addr.port}`;
     }
 
-    console.log(`>>> EverlyBot (TS) is online on ${listenLocation}`);
+    console.log(`>>> HearthstoneTrainer (TS) is online on ${listenLocation}`);
     console.log(`>>> Connected to SynapSys at ${synapsysUrl}`);
 });

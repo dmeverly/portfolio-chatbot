@@ -1,0 +1,7 @@
+{
+  "senderId": "HearthstoneTrainer",
+  "synapsysClientKey": "put key here",
+  "providerId": "ollama",
+  "model": "quen3:8b",
+  "systemInstructionPath": "path to instructions",
+}
